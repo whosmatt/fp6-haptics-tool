@@ -1,24 +1,36 @@
 #!/bin/bash
-# Install a hapkit project on the dev device so the framework uses it until removed (survives reboots):
+# Install a hapkit project on a userdebug test device so the framework uses it until removed (survives reboots):
 #   haptic_ram.bin  -> /vendor/firmware (adb remount overlay)
-#   haptic.ko       -> /vendor/etc/hapkit, built from KWT with the project's effect table
+#   haptic.ko       -> /vendor/etc/hapkit, built from HAPKIT_KDIR with the project's effect table
 #   boot hook       -> /system/etc/init/hapkit.rc + /system/etc/hapkit/swap.sh: swaps the module in post-fs-data,
 #                      before the vibrator HAL starts
 # usage: tools/devinstall.sh [project]          install and reboot
 #        tools/devinstall.sh --remove           delete everything above and reboot (back to stock)
-# Needs: KWT = kernel worktree with the primitives series (default ~/lineage/haptics-prims-wt); the driver is
-#        copied, its aw_ff_effects table replaced by the project's, and built out of tree (KWT stays clean),
-#        KBUILD = script whose K=/O=/MK lines describe the kernel build (default ~/lineage/build_kernel_haptic24.sh),
-#        a userdebug build with root, adb remount working, and the device serial below.
+# Settings (environment, or KEY=VALUE lines in hapkit.local.env; see hapkit.local.env.example):
+#   HAPKIT_SERIAL  ro.serialno of the test device (required)
+#   HAPKIT_ADB     adb binary (default: adb or adb.exe on PATH)
+#   HAPKIT_KDIR    kernel source with the haptic_hv primitives series; its driver is copied, the aw_ff_effects
+#                  table replaced by the project's and built out of tree (HAPKIT_KDIR stays clean)
+#   HAPKIT_KMAKE   command that runs make for the device's kernel (prepared build tree: modules_prepare done,
+#                  Module.symvers present); called as "$HAPKIT_KMAKE M=<dir> modules"
+#   HAPKIT_STRIP   llvm-strip binary (default: llvm-strip on PATH)
+# The device needs root (adb root) and a working adb remount (verity disabled).
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")/.." && pwd)
-ADB=${HAPKIT_ADB:-/mnt/c/Users/matt/adb-fastboot/platform-tools/adb.exe}
-SERIAL=${HAPKIT_SERIAL:-214d028e}
-KWT=${KWT:-$HOME/lineage/haptics-prims-wt}
-KBUILD=${KBUILD:-$HOME/lineage/build_kernel_haptic24.sh}
+if [ -f "$HERE/hapkit.local.env" ]; then
+    while IFS='=' read -r k v; do
+        case "$k" in ''|\#*) continue ;; esac
+        [ -n "${!k:-}" ] || export "$k=$v"
+    done < "$HERE/hapkit.local.env"
+fi
+ADB=${HAPKIT_ADB:-$(command -v adb || command -v adb.exe || true)}
+SERIAL=${HAPKIT_SERIAL:?set HAPKIT_SERIAL to the ro.serialno of the test device}
+for f in ${HAPKIT_FORBID//,/ }; do [ "$SERIAL" != "$f" ] || { echo "refusing $SERIAL (HAPKIT_FORBID)"; exit 1; }; done
+[ -n "$ADB" ] || { echo "adb not found (set HAPKIT_ADB)"; exit 1; }
 A=("$ADB" -s "$SERIAL")
 sh() { "${A[@]}" shell "$@" | tr -d '\r'; }
-push() { "${A[@]}" push "$(wslpath -w "$1" 2>/dev/null || echo "$1")" "$2" >/dev/null; }
+hostpath() { case "$ADB" in *.exe) wslpath -w "$1" ;; *) echo "$1" ;; esac; }
+push() { "${A[@]}" push "$(hostpath "$1")" "$2" >/dev/null; }
 
 [ "$(sh getprop ro.serialno)" = "$SERIAL" ] || { echo "device $SERIAL not attached"; exit 1; }
 "${A[@]}" root >/dev/null; sleep 2
@@ -30,8 +42,11 @@ if [ "${1:-}" = "--remove" ]; then
 fi
 
 PROJECT=${1:-$HERE/projects/fp6.hapkit.json}
+KDIR=${HAPKIT_KDIR:?set HAPKIT_KDIR to the kernel source with the haptic_hv series}
+KMAKE=${HAPKIT_KMAKE:?set HAPKIT_KMAKE to a command that runs make for the device kernel}
+STRIP=${HAPKIT_STRIP:-llvm-strip}
 OUT=$(mktemp -d); trap 'rm -rf "$OUT"' EXIT
-cp -r "$KWT/drivers/misc/haptic_hv" "$OUT/haptic_hv"
+cp -r "$KDIR/drivers/misc/haptic_hv" "$OUT/haptic_hv"
 rm -f "$OUT"/haptic_hv/*.o "$OUT"/haptic_hv/*.ko "$OUT"/haptic_hv/.*.cmd
 PYTHONPATH="$HERE" python3 - "$PROJECT" "$OUT" <<'EOF'
 import sys
@@ -49,9 +64,8 @@ open(cp, "w", newline="\r\n").write(src[:a] + rows + src[b:])
 print(f"{p['name']}: haptic_ram.bin {rep['sha256'][:12]} ({rep['file_bytes']} B)")
 EOF
 
-eval "$(sed -n '/^K=/,/LIBCLANG_PATH/p' "$KBUILD")"
-"${MK[@]}" M="$OUT/haptic_hv" modules 2>&1 | grep -E "warning|error" && exit 1 || true
-"$CL/llvm-strip" --strip-debug -o "$OUT/haptic.ko" "$OUT/haptic_hv/haptic.ko"
+$KMAKE M="$OUT/haptic_hv" modules 2>&1 | grep -E "warning|error" && exit 1 || true
+"$STRIP" --strip-debug -o "$OUT/haptic.ko" "$OUT/haptic_hv/haptic.ko"
 
 cat > "$OUT/hapkit.rc" <<'EOF'
 # hapkit test setup (adb remount overlay; userdebug only). Swaps haptic.ko for /vendor/etc/hapkit/haptic.ko

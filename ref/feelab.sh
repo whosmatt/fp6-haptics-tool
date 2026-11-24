@@ -7,7 +7,6 @@ D=/data/local/tmp/feelab
 N=/sys/class/leds/aw_vibrator
 P=/sys/module/firmware_class/parameters/path
 B=/sys/module/haptic/parameters/rtp_brake
-[ "$(getprop ro.serialno)" = "214d028e" ] || { echo "wrong device"; exit 1; }
 [ "$(id -u)" = 0 ] || { echo "need root (adb root)"; exit 1; }
 [ -e $B ] || { echo "rtp_brake parameter missing (test module not loaded)"; exit 1; }
 evdev() { for e in /sys/class/input/event*; do [ "$(cat $e/device/name 2>/dev/null)" = "aw-haptic-hv" ] && { echo /dev/input/${e##*/}; return; }; done; }

@@ -10,3 +10,5 @@ projects/*.hapkit.json
 !projects/fp6.hapkit.json
 # proprietary references (e.g. Pixel wavetables) are saved next to a project, never committed
 *.local.json
+# local device/kernel settings
+hapkit.local.env

@@ -17,7 +17,7 @@ PROVENANCE_RE = re.compile(r"^(original|stock|(reference|traced):[A-Za-z0-9_.:#/
 HERE = os.path.dirname(os.path.abspath(__file__))
 STOCK_BIN = os.path.normpath(os.path.join(HERE, "..", "..", "ref", "vendor", "haptic_ram.stock.bin"))
 
-# f0 / Q measured on 214d028e with the phone's microphone (tools/capture.py, 2026-10-11): free-decay f0
+# f0 / Q measured on an FP6 with the phone's microphone (tools/capture.py, 2026-10-11): free-decay f0
 # 231.5-232.0 Hz (driver calibration: 232.4), Q_free 25-27 at all levels. Q_drive 26 from 32 brake variants
 # (residual ringing after the brake, median |measured - model| 0.4 dB; Q_drive 22 from the rise fit leaves brakes
 # ~5 % too weak). Steady-state drive above ~0.3-0.5 FS compresses and grows even harmonics (rattles).

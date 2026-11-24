@@ -513,7 +513,7 @@ ROUTES_PUT = {
 def make_handler(app: App):
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
-        server_version = f"hapkit/{__version__}"
+        server_version = f"fp6-haptics-tool/{__version__}"
 
         def log_message(self, fmt, *args):
             pass
@@ -578,7 +578,7 @@ def serve(host: str = "127.0.0.1", port: int = 8765, project_path: str | None = 
     app = App(project_path)
     httpd = ThreadingHTTPServer((host, port), make_handler(app))
     httpd.daemon_threads = True
-    print(f"hapkit {__version__} on http://{host}:{port}/", flush=True)
+    print(f"fp6-haptics-tool {__version__} on http://{host}:{port}/", flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

@@ -1,8 +1,8 @@
-# hapkit — specification (v1)
+# fp6-haptics-tool — specification (v1)
 
 Waveform workbench for the Fairphone 6 haptics (Awinic AW86938, LRA f0 ≈ 232.4 Hz). Designs int8 @ 24 kHz
 waves for Android effects and primitives, compares them with references, simulates the LRA, live-tests on the
-dev device, and exports for two upstream routes:
+test device, and exports for two upstream routes:
 
 - **RAM route**: custom `haptic_ram.bin` + kernel effect/primitive sequence table (sequencer slots, loops, waits).
 - **Stream route**: QTI `libqtivibratoreffect` effect streams (`struct effect_stream`, int8 PCM) as C source.
@@ -18,8 +18,9 @@ This document is the contract between modules. Research inputs: `docs/research/*
 - Rounding everywhere in core: round half away from zero: `qround(x) = int(math.copysign(math.floor(abs(x)+0.5), x))`.
 - Frontend: vanilla ES modules + `<canvas>`, no framework, no CDN, no build step, works offline.
   Technical UI: labels, units and numbers only; no explanatory prose, no marketing text, no onboarding.
-- Device safety: device operations only on `ro.serialno == 214d028e` (configurable constant, default that value);
-  verify the serial before every state-changing batch; refuse anything else. Never touch serial `3c439602`.
+- Device safety: device operations only on `ro.serialno == HAPKIT_SERIAL` (environment or `hapkit.local.env`, no
+  default); verify the serial before every state-changing batch; refuse anything else and anything in
+  `HAPKIT_FORBID`.
 - Vendor material (`ref/vendor/`, stock waves, Pixel data) is local-only. Exports with `upstream: true` refuse
   waves whose provenance is not `original` (see §3.2).
 - Python style: type hints, small functions, terse docstrings, no comments restating code. JS: ES2022 modules.
@@ -40,7 +41,8 @@ hapkit/analysis/lra.py     LRA simulation, metrics, brake optimizer (numpy/scipy
 hapkit/importers/carray.py C/C++ int8 array sources (OSOM effect.cpp, QTI VibratorPatterns.cpp)
 hapkit/importers/wavfile.py WAV and raw PCM
 hapkit/importers/cirrus.py Cirrus CS40L26/CS40L25 wavetable (.bin, WMDR) — phase 2
-hapkit/device/adb.py       persistent adb root shell, push/pull (Windows adb.exe from WSL) — phase 2
+hapkit/config.py           local settings: environment, then hapkit.local.env (gitignored)
+hapkit/device/adb.py       persistent adb root shell, push/pull (native adb or Windows adb.exe from WSL) — phase 2
 hapkit/device/aw.py        AW8693x live-test protocol over sysfs — phase 2
 hapkit/server.py           HTTP JSON API + static files
 web/index.html, web/css/app.css, web/js/*.js
@@ -71,7 +73,7 @@ ref/vendor/                vendor material (gitignored): haptic_ram.stock.bin, d
 - `device.f0` Hz, `q_drive` loaded Q while the output stage drives (including 0-valued samples inside a wave),
   `q_free` Q after playback ends (output released). `ram_end` = last SRAM address (0x1FFF). `max_waves` = driver
   `AW_RAM_WAVE_MAX`. `wait_unit` = samples per wait step (WAVCFG13, series sets 64). `loop_extra_plays`: a slot with
-  loop register value `n` plays `n + loop_extra_plays` times; **measured on 214d028e (2026-10-09): 1** — loop 0/1/2/
+  loop register value `n` plays `n + loop_extra_plays` times; **measured on an FP6 (2026-10-09): 1** — loop 0/1/2/
   5/14 played 1/2/3/6/15 times, MAINLOOP 1/2 repeated the program 2/3 times, a 3-unit wait added 8.0 ms.
 - `ram.waves`: ordered wave ids; RAM index = position + 1. A wave may exist without being in RAM (stream-only).
 - Ids: `^[a-z0-9_]{1,40}$`, unique per collection.
@@ -228,7 +230,7 @@ replace it verbatim: `{ id, { seq }, { loop }, scale }`, values from column 40, 
 dropped; scale in % (≤ 100); `AW_FF_PRIMITIVE_NOOP` (plays nothing) before the first primitive.
 
 ```c
-/* hapkit 0.1.0, project "<name>", sha256 <first 16 hex of canonical project json> */
+/* fp6-haptics-tool 0.1.0, project "<name>", sha256 <first 16 hex of canonical project json> */
 /* provenance: click=original, ... */
 static const struct aw_ff_effect aw_ff_effects[] = {
 	{ AW_FF_EFFECT_CLICK,		{ 9 }, { 0 }, 100 },
@@ -333,8 +335,8 @@ Render result:
 
 ## 7. Device protocol (phase 2; details from `docs/research/driver_livetest.md`)
 
-- adb: Windows `adb.exe` (`/mnt/c/Users/matt/adb-fastboot/platform-tools/adb.exe`, overridable via
-  `HAPKIT_ADB`), `-s 214d028e`; strip `\r`; host paths for push/pull via `wslpath -w`.
+- adb: `HAPKIT_ADB`, else `adb` / `adb.exe` from PATH; `-s $HAPKIT_SERIAL`; strip `\r`; with a Windows `adb.exe`
+  (WSL) host paths for push/pull go through `wslpath -w`.
 - Persistent root shell (`adb root` once, then one long-lived `adb shell` with sentinel-delimited commands) to keep
   per-action latency low; fallback one-shot `adb shell`.
 - Working dir `/data/local/tmp/hapkit/`, firmware dir `/data/local/tmp/hapkit/fw/`.
@@ -352,7 +354,7 @@ Render result:
 Dark, dense, technical. Monospace for numbers. Colours as CSS variables. No prose.
 
 ```
-┌ top bar: hapkit · project ▾ (new/open/save/save as) · import ▾ · export ▾ · undo/redo ·
+┌ top bar: fp6-haptics-tool · project ▾ (new/open/save/save as) · import ▾ · export ▾ · undo/redo ·
 │          fs · f0 · q_drive · q_free (editable) · device pill (serial · root · selinux · ram hash) ┐
 ├ left (library) ──────┬ center (plots, shared time axis) ───────────────┬ right (inspector) ─────┤
 │ RAM  n/16  used/free │ waveform: int8 samples, envelope, segment      │ selected item fields   │

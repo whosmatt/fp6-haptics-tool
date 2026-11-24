@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record the dev device's own microphone (or IMU) while it plays RAM sequences, then fit f0 / Q per sequence.
+"""Record the test device's own microphone (or IMU) while it plays RAM sequences, then fit f0 / Q per sequence.
 
 usage: python3 tools/capture.py [project] [--seq m_burst20,m_half20] [--reps 6] [--sensor mic:6] [--gain 128]
                                  [--compare REF_SEQ [--window 40,100]]

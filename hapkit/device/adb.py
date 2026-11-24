@@ -1,4 +1,5 @@
-"""adb access to the dev device from WSL (Windows adb.exe), pinned to one serial."""
+"""adb access to the test device, pinned to one serial (HAPKIT_SERIAL). Works with a native adb or, from WSL,
+with the Windows adb.exe (host paths are converted with wslpath)."""
 from __future__ import annotations
 
 import os
@@ -6,9 +7,7 @@ import shlex
 import shutil
 import subprocess
 
-DEFAULT_ADB = "/mnt/c/Users/matt/adb-fastboot/platform-tools/adb.exe"
-DEV_SERIAL = "214d028e"          # development device; nothing else is ever driven
-FORBIDDEN = {"3c439602"}         # daily driver
+from .. import config
 
 
 class AdbError(RuntimeError):
@@ -16,13 +15,23 @@ class AdbError(RuntimeError):
 
 
 def adb_path() -> str:
-    p = os.environ.get("HAPKIT_ADB") or DEFAULT_ADB
-    if os.path.exists(p):
-        return p
-    found = shutil.which("adb")
+    p = config.get("HAPKIT_ADB")
+    if p:
+        if os.path.exists(p):
+            return p
+        raise AdbError(f"HAPKIT_ADB {p} not found")
+    found = shutil.which("adb") or shutil.which("adb.exe")
     if not found:
-        raise AdbError(f"adb not found ({p})")
+        raise AdbError("adb not found on PATH (set HAPKIT_ADB)")
     return found
+
+
+def dev_serial() -> str | None:
+    return config.get("HAPKIT_SERIAL")
+
+
+def forbidden() -> set[str]:
+    return set((config.get("HAPKIT_FORBID") or "").replace(",", " ").split())
 
 
 def host_path(path: str, adb: str) -> str:
@@ -33,8 +42,11 @@ def host_path(path: str, adb: str) -> str:
 
 class Adb:
     def __init__(self, serial: str | None = None):
-        self.serial = serial or os.environ.get("HAPKIT_SERIAL") or DEV_SERIAL
-        if self.serial in FORBIDDEN:
+        self.serial = serial or dev_serial()
+        if not self.serial:
+            raise AdbError("no test device configured: set HAPKIT_SERIAL (environment or hapkit.local.env) "
+                           "to its ro.serialno")
+        if self.serial in forbidden():
             raise AdbError(f"refusing serial {self.serial}")
         self.adb = adb_path()
         self.verified = False
@@ -65,9 +77,9 @@ class Adb:
 
     def verify(self) -> str:
         sn = self.shell("getprop ro.serialno").strip()
-        if sn in FORBIDDEN or sn != DEV_SERIAL:
+        if sn in forbidden() or sn != self.serial:
             self.verified = False
-            raise AdbError(f"device reports ro.serialno {sn!r}; only {DEV_SERIAL} is allowed")
+            raise AdbError(f"device reports ro.serialno {sn!r}; only {self.serial} is allowed")
         self.verified = True
         return sn
 

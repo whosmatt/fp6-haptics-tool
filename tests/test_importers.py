@@ -7,7 +7,8 @@ import numpy as np
 from hapkit.core import project
 from hapkit.importers import carray, import_data, ref_samples, wavfile
 
-QTI = "/home/matt/lineage/vendor/qcom/opensource/vibrator/effect/effect.cpp"
+# vendor/qcom/opensource/vibrator/effect/effect.cpp of a LineageOS tree; the test is skipped without it
+QTI = os.environ.get("HAPKIT_QTI_EFFECT_CPP", "")
 
 SNIPPET = r"""
 #define RATE 24000

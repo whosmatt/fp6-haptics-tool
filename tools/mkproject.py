@@ -118,7 +118,7 @@ def measure_project() -> dict:
 
 def brakes_project() -> dict:
     """Brake model check: one drive, brake amplitude / phase / length varied; play all with
-    tools/capture.py projects/fp6-brakes.hapkit.json --seq all --compare s_c_nb. Measured on 214d028e (2026-10-11),
+    tools/capture.py projects/fp6-brakes.hapkit.json --seq all --compare s_c_nb. Measured on an FP6 (2026-10-11),
     model f0 231.7 / Q_drive 26 / Q_free 26: within 1.4 dB except c_b20_75 (+2.5) and t_b10_87, where the model
     predicts a deep null (-41 dB) and the device reaches -34."""
     p = proj.new_project("empty", "fp6-brakes")

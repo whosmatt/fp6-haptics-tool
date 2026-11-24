@@ -5,7 +5,7 @@ import argparse
 from hapkit.server import serve
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(description="hapkit haptic waveform workbench")
+    ap = argparse.ArgumentParser(description="fp6-haptics-tool: haptic waveform workbench")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--project")

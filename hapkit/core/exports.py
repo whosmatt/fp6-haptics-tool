@@ -37,7 +37,7 @@ def _provenance_check(project: dict, wave_ids: list[str], upstream: bool) -> lis
 def _header(project: dict, wave_ids: list[str], comment: str = "c") -> list[str]:
     waves = {w["id"]: w for w in project.get("waves", [])}
     dev = project.get("device", {})
-    lines = [f"hapkit {__version__}, project \"{project.get('name', '')}\", sha256 {project_hash(project)}",
+    lines = [f"fp6-haptics-tool {__version__}, project \"{project.get('name', '')}\", sha256 {project_hash(project)}",
              f"fs {dev.get('fs')} Hz, f0 {dev.get('f0')} Hz (xf0 below is relative to this)",
              "provenance: " + ", ".join(f"{w}={waves[w].get('provenance', '?')}" for w in wave_ids)]
     if comment == "c":

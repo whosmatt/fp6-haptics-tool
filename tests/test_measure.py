@@ -25,7 +25,7 @@ class FitQ(unittest.TestCase):
             self.assertAlmostEqual(f["q_drive"], qd, delta=qd * 0.15)
 
     def test_plateau_burst(self):
-        # saturated drive (flat plateau, as recorded on 214d028e at full scale): the decay must start at the end
+        # saturated drive (flat plateau, as recorded on an FP6 at full scale): the decay must start at the end
         # of the plateau, not at the envelope maximum somewhere inside it
         fs, qf = 48000, 26.0
         t = np.arange(int(0.6 * fs)) / fs

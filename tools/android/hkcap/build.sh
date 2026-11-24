@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build hkcap.dex with the JDK, android.jar and d8 from the LineageOS tree (read-only use of prebuilts).
 set -euo pipefail
-LOS=${LOS:-$HOME/lineage}
+LOS=${LOS:?set LOS to a LineageOS source tree}
 JDK=$LOS/prebuilts/jdk/jdk21/linux-x86
 SDK=$LOS/prebuilts/sdk/36/public/android.jar
 HERE=$(cd "$(dirname "$0")" && pwd)

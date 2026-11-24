@@ -1,4 +1,4 @@
-"""Live tests on the dev device through the haptic_hv sysfs interface (no kernel changes).
+"""Live tests on the test device through the haptic_hv sysfs interface (no kernel changes).
 
 RAM: the image is pushed to FW_DIR, firmware_class.path points there (SELinux permissive while a session is
 active: the kernel reads it from /data), ram_update reloads it. Playback programs WAVCFG1-13 and starts RAM mode
@@ -17,7 +17,7 @@ import time
 from ..core import exports, project as proj
 from ..core.sequence import effect_sequence, render_effect, render_sequence, seq_registers
 from ..core.render import render_wave
-from .adb import Adb, AdbError, DEV_SERIAL, q
+from .adb import Adb, AdbError, dev_serial, q
 
 SYS = "/sys/class/leds/aw_vibrator"
 FWPATH = "/sys/module/firmware_class/parameters/path"
@@ -36,7 +36,7 @@ class DeviceManager:
         self.log = log
         self.lock = threading.Lock()
         self.adb: Adb | None = None
-        self.st: dict = {"connected": False, "serial": DEV_SERIAL}
+        self.st: dict = {"connected": False, "serial": dev_serial()}
         self.ram_tag: str | None = None
         self.fw_session = False
         self.fw_orig = ""
@@ -67,7 +67,7 @@ class DeviceManager:
                 self._connect()
                 return self.status()
             except (AdbError, DeviceError) as e:
-                self.st = {"connected": False, "serial": DEV_SERIAL, "error": str(e)}
+                self.st = {"connected": False, "serial": dev_serial(), "error": str(e)}
                 self.log(f"device: {e}", "error")
                 return self.status()
 
