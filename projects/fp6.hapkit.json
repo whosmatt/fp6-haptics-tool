@@ -20,7 +20,7 @@
    "kind": "effect",
    "name": "CLICK",
    "notes": "",
-   "scale": 0.8,
+   "scale": 1,
    "sequence": null,
    "stream_wave": "click"
   },
@@ -31,7 +31,7 @@
    "kind": "effect",
    "name": "DOUBLE_CLICK",
    "notes": "",
-   "scale": 0.8,
+   "scale": 1,
    "sequence": "seq_double_click",
    "stream_wave": null
   },
@@ -64,7 +64,7 @@
    "kind": "effect",
    "name": "POP",
    "notes": "",
-   "scale": 0.8,
+   "scale": 1,
    "sequence": null,
    "stream_wave": "click"
   },
@@ -75,7 +75,7 @@
    "kind": "effect",
    "name": "HEAVY_CLICK",
    "notes": "",
-   "scale": 0.7,
+   "scale": 1,
    "sequence": null,
    "stream_wave": "click_heavy"
   },
@@ -86,7 +86,7 @@
    "kind": "primitive",
    "name": "CLICK",
    "notes": "",
-   "scale": 0.8,
+   "scale": 1,
    "sequence": null,
    "stream_wave": "click"
   },
@@ -97,7 +97,7 @@
    "kind": "primitive",
    "name": "THUD",
    "notes": "",
-   "scale": 0.6,
+   "scale": 0.8,
    "sequence": "seq_thud",
    "stream_wave": null
   },
@@ -414,7 +414,7 @@
     },
     {
      "kind": "wait",
-     "ms": 10
+     "ms": 20
     },
     {
      "kind": "wave",
@@ -496,7 +496,7 @@
    "name": "15ms click",
    "notes": "",
    "post": {
-    "gain": 0.9
+    "gain": 1
    },
    "provenance": "original",
    "segments": [
@@ -601,7 +601,7 @@
    "name": "",
    "notes": "soft and very short, no audible click",
    "post": {
-    "gain": 1
+    "gain": 0.9
    },
    "provenance": "original",
    "segments": [
@@ -636,7 +636,7 @@
      "label": "drive",
      "length": {
       "unit": "cycles",
-      "value": 1
+      "value": 1.5
      },
      "phase": {
       "deg": 0,
@@ -650,15 +650,23 @@
     },
     {
      "amp": {
-      "interp": "linear",
+      "interp": "cos",
       "points": [
        [
         0,
-        -1.026
+        0
+       ],
+       [
+        0.1111,
+        -0.99
+       ],
+       [
+        0.5556,
+        -1.046
        ],
        [
         1,
-        -0.773
+        0
        ]
       ]
      },
@@ -679,10 +687,10 @@
      "label": "brake",
      "length": {
       "unit": "cycles",
-      "value": 1
+      "value": 1.64
      },
      "phase": {
-      "deg": 0,
+      "deg": -0.47,
       "mode": "continue"
      },
      "shape": {
@@ -1179,7 +1187,7 @@
   {
    "id": "tick_low",
    "name": "",
-   "notes": "soft and very short, no audible click. quite weak",
+   "notes": "soft and dull, no audible click. a bit weak. ",
    "post": {
     "gain": 1.5
    },
@@ -1191,11 +1199,15 @@
       "points": [
        [
         0,
+        0
+       ],
+       [
+        0.4,
         1
        ],
        [
         1,
-        0.987
+        1
        ]
       ]
      },
@@ -1204,11 +1216,11 @@
       "points": [
        [
         0,
-        0.5
+        0.7
        ],
        [
         1,
-        0.5
+        0.7
        ]
       ],
       "unit": "f0"
@@ -1216,7 +1228,7 @@
      "label": "drive",
      "length": {
       "unit": "cycles",
-      "value": 1
+      "value": 3
      },
      "phase": {
       "deg": 0,
@@ -1237,12 +1249,12 @@
         0
        ],
        [
-        0.25,
-        -0.0644
+        0.1429,
+        -0.1529
        ],
        [
-        0.75,
-        -0.0644
+        0.4286,
+        -0.1529
        ],
        [
         1,
@@ -1267,10 +1279,10 @@
      "label": "brake",
      "length": {
       "unit": "cycles",
-      "value": 1
+      "value": 1.75
      },
      "phase": {
-      "deg": 89.68,
+      "deg": 56.41,
       "mode": "continue"
      },
      "shape": {
